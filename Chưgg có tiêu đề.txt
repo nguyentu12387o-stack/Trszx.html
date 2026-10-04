@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Doraemon AI V3 — Code Generator Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-primary:#0a0a0f;--bg-secondary:#12121a;--bg-tertiary:#1a1a25;
+  --bg-code:#0d1117;--bg-hover:#252535;--border:#2a2a3a;--border-light:#3a3a4a;
+  --accent:#00d6ff;--accent-dark:#0099cc;--accent-hover:#33e0ff;
+  --accent-glow:rgba(0,214,255,.3);--text-primary:#e4e4e7;--text-secondary:#a1a1aa;
+  --text-muted:#71717a;--success:#10b981;--warning:#f59e0b;--error:#ef4444;
+  --code-keyword:#ff79c6;--code-string:#f1fa8c;--code-comment:#6272a4;
+  --code-function:#50fa7b;--code-number:#bd93f9;
+  --sidebar-width:300px;--header-height:60px;--code-font-size:13px;
+}
+body.light{
+  --bg-primary:#fff;--bg-secondary:#f6f8fa;--bg-tertiary:#f0f2f4;
+  --bg-code:#f8f9fa;--bg-hover:#e5e7eb;--border:#d0d7de;--border-light:#c0c7ce;
+  --text-primary:#24292f;--text-secondary:#57606a;--text-muted:#8b949e;
+}
+body{background:var(--bg-primary);color:var(--text-primary);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  height:100vh;overflow:hidden;font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg-secondary)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+.app{display:flex;height:100vh;width:100vw}
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-width);background:var(--bg-secondary);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  padding:16px;transition:all .3s ease}
+.sidebar.collapsed{width:0;padding:0;overflow:hidden}
+.sidebar-header{display:flex;align-items:center;gap:12px;padding-bottom:16px;
+  border-bottom:1px solid var(--border);margin-bottom:16px}
+.logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),#7c3aed);
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:0 4px 12px var(--accent-glow)}
+.sidebar-title{font-size:18px;font-weight:bold;
+  background:linear-gradient(135deg,var(--accent),#7c3aed);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-subtitle{font-size:11px;color:var(--text-muted);margin-top:2px}
+.new-chat-btn{background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  color:#fff;border:none;padding:12px;border-radius:10px;font-weight:600;
+  cursor:pointer;margin-bottom:16px;transition:all .2s;display:flex;
+  align-items:center;justify-content:center;gap:8px;font-size:14px}
+.new-chat-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px var(--accent-glow)}
+.sidebar-section{margin-bottom:16px}
+.sidebar-section-title{font-size:11px;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600}
+.history-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.history-item{padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;
+  color:var(--text-secondary);transition:all .2s;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+.history-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.history-item.active{background:var(--bg-tertiary);color:var(--text-primary);
+  border-left:3px solid var(--accent)}
+.sidebar-footer{padding-top:16px;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:8px}
+.sidebar-btn{background:var(--bg-tertiary);border:1px solid var(--border);
+  color:var(--text-primary);padding:10px;border-radius:8px;cursor:pointer;
+  font-size:13px;transition:all .2s;display:flex;align-items:center;gap:8px;
+  font-family:inherit;width:100%}
+.sidebar-btn:hover{background:var(--bg-hover);border-color:var(--accent)}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.header{height:var(--header-height);background:var(--bg-secondary);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 20px}
+.header-left{display:flex;align-items:center;gap:12px}
+.toggle-sidebar-btn{background:transparent;border:1px solid var(--border);
+  color:var(--text-primary);width:36px;height:36px;border-radius:8px;
+  cursor:pointer;font-size:16px;transition:all .2s}
+.toggle-sidebar-btn:hover{background:var(--bg-tertiary)}
+.model-selector{background:var(--bg-tertiary);border:1px solid var(--border);
+  color:var(--text-primary);padding:8px 14px;border-radius:8px;font-size:13px;
+  cursor:pointer;outline:none;font-family:inherit}
+.model-selector:hover,.model-selector:focus{border-color:var(--accent)}
+.header-right{display:flex;gap:10px;align-items:center}
+.credit{background:var(--bg-tertiary);padding:6px 12px;border-radius:8px;
+  font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px}
+.credit span{color:var(--accent);font-weight:bold}
+.icon-btn{background:var(--bg-tertiary);border:1px solid var(--border);
+  color:var(--text-primary);padding:8px 12px;border-radius:8px;cursor:pointer;
+  font-size:14px;transition:all .2s}
+.icon-btn:hover{background:var(--bg-hover);border-color:var(--accent);transform:translateY(-1px)}
+/* CHAT */
+.chat-area{flex:1;overflow-y:auto;padding:24px;display:flex;
+  flex-direction:column;gap:20px;background:var(--bg-primary)}
+.welcome-screen{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:40px}
+.welcome-logo{font-size:72px;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.welcome-title{font-size:32px;font-weight:bold;margin-bottom:12px;
+  background:linear-gradient(135deg,var(--accent),#7c3aed);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.welcome-subtitle{color:var(--text-secondary);margin-bottom:32px;font-size:15px}
+.suggestion-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:12px;max-width:800px;width:100%}
+.suggestion-card{background:var(--bg-secondary);border:1px solid var(--border);
+  border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;text-align:left}
+.suggestion-card:hover{border-color:var(--accent);transform:translateY(-2px);
+  box-shadow:0 4px 12px var(--accent-glow)}
+.suggestion-icon{font-size:24px;margin-bottom:8px}
+.suggestion-title{font-weight:600;margin-bottom:4px;font-size:14px}
+.suggestion-desc{color:var(--text-muted);font-size:12px}
+/* MESSAGE */
+.message{display:flex;gap:12px;animation:fadeIn .3s ease;max-width:100%}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.message.user{flex-direction:row-reverse}
+.avatar{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0}
+.message.ai .avatar{background:linear-gradient(135deg,var(--accent),#7c3aed);
+  box-shadow:0 2px 8px var(--accent-glow)}
+.message.user .avatar{background:var(--bg-tertiary);border:1px solid var(--border)}
+.message-content{max-width:75%;padding:14px 18px;border-radius:14px;line-height:1.6}
+.message.ai .message-content{background:var(--bg-secondary);border:1px solid var(--border)}
+.message.user .message-content{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff}
+.message-text{white-space:pre-wrap;word-break:break-word}
+.message-text h1,.message-text h2,.message-text h3{margin:12px 0 8px;font-weight:bold}
+.message-text h1{font-size:20px}
+.message-text h2{font-size:17px;color:var(--accent)}
+.message-text h3{font-size:15px}
+.message-text ul,.message-text ol{margin:8px 0;padding-left:24px}
+.message-text li{margin:4px 0}
+.message-text strong{color:var(--accent);font-weight:600}
+.message-text em{color:var(--text-secondary)}
+.message-text code{background:var(--bg-code);padding:2px 6px;border-radius:4px;
+  font-family:Consolas,Monaco,monospace;font-size:12px;color:var(--code-string)}
+/* CODE */
+.code-block{background:var(--bg-code);border:1px solid var(--border);
+  border-radius:10px;margin:12px 0;overflow:hidden}
+.code-header{background:var(--bg-tertiary);padding:8px 14px;display:flex;
+  justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.code-lang{font-size:11px;color:var(--accent);font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px}
+.copy-btn{background:transparent;border:1px solid var(--border);
+  color:var(--text-secondary);padding:4px 10px;border-radius:6px;font-size:11px;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px;
+  font-family:inherit}
+.copy-btn:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--accent)}
+.copy-btn.copied{background:var(--success);color:#fff;border-color:var(--success)}
+.code-content{padding:14px;overflow-x:auto;
+  font-family:Consolas,Monaco,'Courier New',monospace;
+  font-size:var(--code-font-size);line-height:1.6;tab-size:4;
+  color:var(--text-primary);white-space:pre}
+/* TYPING */
+.typing-indicator{display:flex;gap:4px;padding:8px 0}
+.typing-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
+  animation:typing 1.4s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.5}
+  30%{transform:translateY(-10px);opacity:1}}
+/* INPUT */
+.input-area{padding:20px;background:var(--bg-secondary);border-top:1px solid var(--border)}
+.input-container{max-width:900px;margin:0 auto;position:relative}
+.input-box{width:100%;background:var(--bg-tertiary);border:1px solid var(--border);
+  border-radius:12px;padding:14px 50px 14px 16px;color:var(--text-primary);
+  font-size:14px;resize:none;min-height:52px;max-height:200px;outline:none;
+  transition:all .2s;font-family:inherit}
+.input-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.send-btn{position:absolute;right:12px;bottom:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  border:none;color:#fff;width:36px;height:36px;border-radius:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:16px}
+.send-btn:hover{transform:scale(1.05);box-shadow:0 4px 12px var(--accent-glow)}
+.input-hint{text-align:center;font-size:11px;color:var(--text-muted);margin-top:8px}
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;
+  padding:20px;animation:fadeIn .2s ease}
+.modal.show{display:flex}
+.modal-content{background:var(--bg-secondary);border:1px solid var(--border);
+  border-radius:16px;padding:24px;max-width:700px;width:100%;max-height:85vh;
+  overflow-y:auto;animation:modalSlide .3s ease}
+@keyframes modalSlide{from{opacity:0;transform:scale(.9) translateY(20px)}
+  to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:20px;font-weight:bold;display:flex;align-items:center;gap:8px}
+.close-btn{background:transparent;border:none;color:var(--text-secondary);
+  font-size:24px;cursor:pointer;width:32px;height:32px;display:flex;
+  align-items:center;justify-content:center;border-radius:8px;transition:all .2s}
+.close-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
+/* SETTINGS */
+.settings-grid{display:grid;gap:16px}
+.setting-item{background:var(--bg-tertiary);border:1px solid var(--border);
+  border-radius:10px;padding:14px}
+.setting-label{font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.setting-desc{font-size:12px;color:var(--text-muted);margin-bottom:10px}
+.setting-control{display:flex;gap:8px;align-items:center}
+.setting-input{flex:1;background:var(--bg-primary);border:1px solid var(--border);
+  color:var(--text-primary);padding:8px 12px;border-radius:6px;outline:none;
+  font-size:13px;font-family:inherit}
+.setting-input:focus{border-color:var(--accent)}
+.toggle-switch{position:relative;width:44px;height:24px;background:var(--border);
+  border-radius:12px;cursor:pointer;transition:all .2s}
+.toggle-switch.active{background:var(--accent)}
+.toggle-switch::after{content:'';position:absolute;width:20px;height:20px;
+  background:#fff;border-radius:50%;top:2px;left:2px;transition:all .2s}
+.toggle-switch.active::after{left:22px}
+/* KNOWLEDGE */
+.knowledge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.knowledge-card{background:var(--bg-tertiary);border:1px solid var(--border);
+  border-radius:10px;padding:14px;cursor:pointer;transition:all .2s}
+.knowledge-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.knowledge-card-title{font-weight:600;margin-bottom:6px;color:var(--accent);font-size:14px}
+.knowledge-card-desc{font-size:12px;color:var(--text-secondary);line-height:1.5}
+/* TOAST */
+.toast-container{position:fixed;top:20px;right:20px;z-index:2000;
+  display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--bg-secondary);border:1px solid var(--border);
+  border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;
+  min-width:250px;box-shadow:0 4px 12px rgba(0,0,0,.3);
+  animation:slideInRight .3s ease;font-size:13px}
+@keyframes slideInRight{from{transform:translateX(100%);opacity:0}
+  to{transform:translateX(0);opacity:1}}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--error)}
+.toast.warning{border-left-color:var(--warning)}
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:100;
+    box-shadow:4px 0 12px rgba(0,0,0,.5)}
+  .sidebar.collapsed{transform:translateX(-100%)}
+  .message-content{max-width:90%}
+  .suggestion-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">🤖</div>
+      <div>
+        <div class="sidebar-title">Doraemon AI</div>
+        <div class="sidebar-subtitle">V3 Code Generator Pro</div>
+      </div>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()">
+      <span>✨</span> Cuộc trò chuyện mới
+    </button>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">📚 Thư viện Code</div>
+      <button class="sidebar-btn" onclick="showKnowledge()">
+        <span>🧠</span> Xem kiến thức có sẵn
+      </button>
+    </div>
+    <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="sidebar-section-title">💬 Lịch sử gần đây</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+    <div class="sidebar-footer">
+      <button class="sidebar-btn" onclick="showSettings()"><span>⚙️</span> Cài đặt</button>
+      <button class="sidebar-btn" onclick="exportChat()"><span>💾</span> Xuất dữ liệu</button>
+      <button class="sidebar-btn" onclick="importChat()"><span>📥</span> Nhập dữ liệu</button>
+      <button class="sidebar-btn" onclick="resetAll()"><span>🗑️</span> Reset toàn bộ</button>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <button class="toggle-sidebar-btn" onclick="toggleSidebar()">☰</button>
+        <select class="model-selector" id="modelSelector">
+          <option value="v3">🤖 Doraemon Model V3.0</option>
+          <option value="code">💻 Code Expert Mode</option>
+          <option value="roblox">🎮 Roblox Specialist</option>
+          <option value="lua">🌙 Lua Master</option>
+        </select>
+      </div>
+      <div class="header-right">
+        <div class="credit">💎 <span>∞</span> Credits</div>
+        <button class="icon-btn" onclick="toggleTheme()" title="Đổi theme">🌓</button>
+        <button class="icon-btn" onclick="showHistory()" title="Lịch sử">📜</button>
+        <button class="icon-btn" onclick="clearChat()" title="Xóa chat">🗑️</button>
+      </div>
+    </header>
+    <div class="chat-area" id="chatArea">
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-logo">🤖</div>
+        <div class="welcome-title">Doraemon AI V3 Ultimate</div>
+        <div class="welcome-subtitle">
+          Chuyên gia sinh code Lua/Roblox với kiến thức mở rộng<br>
+          RenderStepped • ESP • DataStore • UI Library • và hơn thế nữa
+        </div>
+        <div class="suggestion-grid" id="suggestionGrid"></div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-container">
+        <textarea class="input-box" id="inputBox"
+          placeholder="Nhập yêu cầu code Lua/Roblox... (Shift+Enter để xuống dòng)"
+          rows="1"></textarea>
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="input-hint">
+        Nhấn Enter để gửi • Shift+Enter để xuống dòng • Gõ /help để xem lệnh
+      </div>
+    </div>
+  </main>
+</div>
+<div class="modal" id="historyModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">📜 Lịch sử trò chuyện</div>
+      <button class="close-btn" onclick="closeModal('historyModal')">×</button>
+    </div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+<div class="modal" id="knowledgeModal">
+  <div class="modal-content" style="max-width:900px">
+    <div class="modal-header">
+      <div class="modal-title">🧠 Thư viện kiến thức</div>
+      <button class="close-btn" onclick="closeModal('knowledgeModal')">×</button>
+    </div>
+    <div class="knowledge-grid" id="knowledgeGrid"></div>
+  </div>
+</div>
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Cài đặt</div>
+      <button class="close-btn" onclick="closeModal('settingsModal')">×</button>
+    </div>
+    <div class="settings-grid" id="settingsContent"></div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ============================================================
+   DORAEMON AI V3 — FULL APP
+   ============================================================ */
+const AI_NAME = "Doraemon AI V3";
+const VERSION = "3.0 Ultimate";
+const STORAGE_KEYS = {
+  memory:"doraemon_memory_v3", history:"doraemon_history_v3",
+  chats:"doraemon_chats_v3", knowledge:"doraemon_knowledge_v3",
+  settings:"doraemon_settings_v3"
+};
+const DEFAULT_SETTINGS = {
+  theme:"dark", autoSave:true, showCodeNumbers:true,
+  codeFontSize:13, responseLength:"detailed", language:"vi",
+  soundEnabled:false, animationsEnabled:true
+};
+let settings = {...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(STORAGE_KEYS.settings)||"{}"))};
+let chats = JSON.parse(localStorage.getItem(STORAGE_KEYS.chats)||"[]");
+let history = JSON.parse(localStorage.getItem(STORAGE_KEYS.history)||"[]");
+let currentChatId = null;
+let currentChat = [];
+let isProcessing = false;
+
+/* ============================================================
+   KNOWLEDGE BASE — CODE MODULES
+   ============================================================ */
+const CODE_MODULES = {
+  renderstepped: {
+    title:"RenderStepped Bounding Box", category:"Rendering", icon:"📦",
+    description:"Hook RenderStepped để vẽ bounding box theo dõi đối tượng trong Workspace",
+    tags:["renderstepped","bounding box","runservice","camera"],
+    code:`-- Bounding Box Renderer — Hook RenderStepped
+local RunService = game:GetService("RunService")
+local Workspace  = game:GetService("Workspace")
+local Players    = game:GetService("Players")
+
+local CONFIG = {
+    MaxDistance = 500,
+    BoxColor    = Color3.fromRGB(255,50,50),
+    BoxThickness= 0.15,
+    MaxObjects  = 100,
+    FilterTypes = {"BasePart"}
+}
+
+local activeBoxes = {}
+
+local function clearAll()
+    for _, list in pairs(activeBoxes) do
+        for _, p in ipairs(list) do
+            if p and p.Parent then p:Destroy() end
+        end
+    end
+    activeBoxes = {}
+end
+
+local function drawBox(obj, folder)
+    if not obj:IsA("BasePart") then return end
+    local cf, size = obj.CFrame, obj.Size
+    local half = size / 2
+    local corners = {
+        cf*CFrame.new(-half.X,-half.Y,-half.Z), cf*CFrame.new(half.X,-half.Y,-half.Z),
+        cf*CFrame.new(half.X,half.Y,-half.Z),   cf*CFrame.new(-half.X,half.Y,-half.Z),
+        cf*CFrame.new(-half.X,-half.Y,half.Z),  cf*CFrame.new(half.X,-half.Y,half.Z),
+        cf*CFrame.new(half.X,half.Y,half.Z),    cf*CFrame.new(-half.X,half.Y,half.Z)
+    }
+    local pairs12 = {{1,2},{2,3},{3,4},{4,1},{5,6},{6,7},{7,8},{8,5},{1,5},{2,6},{3,7},{4,8}}
+    local edges = {}
+    for _, pr in ipairs(pairs12) do
+        local p1, p2 = corners[pr[1]].Position, corners[pr[2]].Position
+        local mid = (p1+p2)/2
+        local len = (p2-p1).Magnitude
+        local e = Instance.new("Part")
+        e.Anchored=true; e.CanCollide=false; e.CanQuery=false
+        e.Material=Enum.Material.Neon; e.Color=CONFIG.BoxColor; e.Transparency=0.3
+        e.Size=Vector3.new(CONFIG.BoxThickness,CONFIG.BoxThickness,len)
+        e.CFrame=CFrame.lookAt(mid,p2)
+        e.Parent=folder
+        table.insert(edges,e)
+    end
+    activeBoxes[obj] = edges
+end
+
+local function onRender()
+    clearAll()
+    local char = Players.LocalPlayer.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local folder = Instance.new("Folder")
+    folder.Name = "BBHighlights"
+    folder.Parent = Workspace
+
+    local count = 0
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if count >= CONFIG.MaxObjects then break end
+        local isValid = false
+        for _, t in ipairs(CONFIG.FilterTypes) do
+            if obj:IsA(t) then isValid = true break end
+        end
+        if not isValid or obj:IsDescendantOf(char) then continue end
+        if (root.Position - obj.Position).Magnitude > CONFIG.MaxDistance then continue end
+        drawBox(obj, folder)
+        count = count + 1
+    end
+    task.delay(0.1, function() if folder.Parent then folder:Destroy() end end)
+end
+
+RunService.RenderStepped:Connect(onRender)
+print("[BB] Renderer started")`
+  },
+
+  esp: {
+    title:"ESP System", category:"Visualization", icon:"👁️",
+    description:"Highlight player qua tường kèm health bar, tên, khoảng cách",
+    tags:["esp","highlight","player","billboard"],
+    code:`-- ESP System — Player Highlight
+local Players   = game:GetService("Players")
+local RunService= game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local CONFIG = {
+    MaxDistance = 1000,
+    TeamCheck   = false,
+    ShowHealth  = true,
+    ShowDistance= true,
+    FillColor   = Color3.fromRGB(255,50,50),
+    OutlineColor= Color3.fromRGB(255,255,255)
+}
+
+local espCache = {}
+
+local function createESP(player)
+    local char = player.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum  = char:FindFirstChildOfClass("Humanoid")
+    if not root or not hum then return end
+
+    local data = {}
+    local hl = Instance.new("Highlight")
+    hl.FillColor=CONFIG.FillColor; hl.OutlineColor=CONFIG.OutlineColor
+    hl.FillTransparency=0.5; hl.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent=char
+    data.hl = hl
+
+    local bb = Instance.new("BillboardGui")
+    bb.Size=UDim2.new(0,200,0,70); bb.StudsOffset=Vector3.new(0,3,0)
+    bb.AlwaysOnTop=true; bb.Parent=root
+    data.bb = bb
+
+    local name = Instance.new("TextLabel")
+    name.Size=UDim2.new(1,0,0.4,0); name.BackgroundTransparency=1
+    name.Text=player.DisplayName; name.TextColor3=Color3.new(1,1,1)
+    name.TextStrokeTransparency=0; name.Font=Enum.Font.GothamBold
+    name.TextSize=14; name.Parent=bb
+    data.name = name
+
+    if CONFIG.ShowHealth then
+        local bg = Instance.new("Frame")
+        bg.Size=UDim2.new(0.8,0,0.15,0); bg.Position=UDim2.new(0.1,0,0.45,0)
+        bg.BackgroundColor3=Color3.fromRGB(50,50,50); bg.BorderSizePixel=0
+        bg.Parent=bb
+        Instance.new("UICorner",bg).CornerRadius=UDim.new(0,4)
+        local fill = Instance.new("Frame")
+        fill.Size=UDim2.new(1,0,1,0); fill.BackgroundColor3=Color3.fromRGB(50,255,50)
+        fill.BorderSizePixel=0; fill.Parent=bg
+        Instance.new("UICorner",fill).CornerRadius=UDim.new(0,4)
+        data.fill = fill
+    end
+
+    if CONFIG.ShowDistance then
+        local d = Instance.new("TextLabel")
+        d.Size=UDim2.new(1,0,0.3,0); d.Position=UDim2.new(0,0,0.7,0)
+        d.BackgroundTransparency=1; d.TextColor3=Color3.fromRGB(200,200,200)
+        d.Font=Enum.Font.Gotham; d.TextSize=12; d.TextStrokeTransparency=0
+        d.Parent=bb
+        data.dist = d
+    end
+    espCache[player] = data
+end
+
+local function removeESP(player)
+    local d = espCache[player]
+    if not d then return end
+    if d.hl then d.hl:Destroy() end
+    if d.bb then d.bb:Destroy() end
+    espCache[player] = nil
+end
+
+local function update()
+    local lp = Players.LocalPlayer
+    local char = lp.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player == lp then continue end
+        local c = player.Character
+        if not c then removeESP(player) continue end
+        local h = c:FindFirstChildOfClass("Humanoid")
+        local r = c:FindFirstChild("HumanoidRootPart")
+        if not h or h.Health <= 0 or not r then removeESP(player) continue end
+        if CONFIG.TeamCheck and player.Team == lp.Team then removeESP(player) continue end
+
+        local dist = (root.Position - r.Position).Magnitude
+        if dist > CONFIG.MaxDistance then
+            if espCache[player] then espCache[player].bb.Enabled = false end
+            continue
+        end
+
+        if not espCache[player] then createESP(player) end
+        local d = espCache[player]
+        if d then
+            d.bb.Enabled = true
+            if d.fill and h.MaxHealth > 0 then
+                local pct = h.Health / h.MaxHealth
+                d.fill.Size = UDim2.new(pct,0,1,0)
+                d.fill.BackgroundColor3 = pct > 0.6 and Color3.fromRGB(50,255,50)
+                    or pct > 0.3 and Color3.fromRGB(255,200,50)
+                    or Color3.fromRGB(255,50,50)
+            end
+            if d.dist then d.dist.Text = string.format("%dm", math.floor(dist)) end
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function()
+        task.wait(0.5); createESP(p)
+    end)
+end)
+Players.PlayerRemoving:Connect(removeESP)
+
+RunService.RenderStepped:Connect(update)
+print("[ESP] Enabled")`
+  },
+
+  datastore: {
+    title:"Advanced DataStore Manager", category:"Data", icon:"💾",
+    description:"Hệ thống lưu dữ liệu chuyên nghiệp: session lock, auto-save, retry",
+    tags:["datastore","save","load","session"],
+    code:`-- Advanced DataStore Manager
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+
+local CONFIG = {
+    StoreName   = "PlayerData_v3",
+    AutoSave    = 300,
+    MaxRetries  = 3,
+    DefaultData = {
+        Coins=0, Gems=0, Level=1, XP=0,
+        Inventory={}, Stats={PlayTime=0, SessionsPlayed=0}
+    }
+}
+
+local store = DataStoreService:GetDataStore(CONFIG.StoreName)
+local cache, locks = {}, {}
+
+local function deepCopy(t)
+    if type(t) ~= "table" then return t end
+    local c = {}
+    for k,v in pairs(t) do c[deepCopy(k)] = deepCopy(v) end
+    return c
+end
+
+local function retry(fn)
+    for i = 1, CONFIG.MaxRetries do
+        local ok, res = pcall(fn)
+        if ok then return true, res end
+        task.wait(2^(i-1))
+    end
+    return false
+end
+
+local function load(player)
+    local key = "P_"..player.UserId
+    local ok, data = retry(function() return store:GetAsync(key) end)
+    if not ok then return nil end
+    if data then
+        local merged = deepCopy(CONFIG.DefaultData)
+        for k,v in pairs(data) do merged[k] = v end
+        cache[player.UserId] = merged
+    else
+        cache[player.UserId] = deepCopy(CONFIG.DefaultData)
+    end
+    return cache[player.UserId]
+end
+
+local function save(player)
+    local data = cache[player.UserId]
+    if not data then return end
+    local ok = retry(function() store:SetAsync("P_"..player.UserId, data) end)
+    return ok
+end
+
+local function mkLeaderstats(player, data)
+    local old = player:FindFirstChild("leaderstats")
+    if old then old:Destroy() end
+    local ls = Instance.new("Folder")
+    ls.Name = "leaderstats"; ls.Parent = player
+    for _, k in ipairs({"Coins","Gems","Level"}) do
+        local v = Instance.new("IntValue")
+        v.Name = k; v.Value = data[k] or 0; v.Parent = ls
+    end
+end
+
+Players.PlayerAdded:Connect(function(p)
+    local data = load(p)
+    if data then
+        data.Stats.SessionsPlayed = (data.Stats.SessionsPlayed or 0) + 1
+        mkLeaderstats(p, data)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    save(p)
+    cache[p.UserId] = nil
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(CONFIG.AutoSave)
+        for _, p in ipairs(Players:GetPlayers()) do save(p) end
+    end
+end)
+
+game:BindToClose(function()
+    for _, p in ipairs(Players:GetPlayers()) do save(p) end
+    task.wait(2)
+end)
+
+print("[DataStore] Ready")`
+  },
+
+  fly: {
+    title:"Fly System", category:"Movement", icon:"🕊️",
+    description:"Bay lượn mượt mà với WASD + Space/Shift",
+    tags:["fly","movement","wasd"],
+    code:`-- Fly System
+local Players         = game:GetService("Players")
+local UserInputService= game:GetService("UserInputService")
+local RunService      = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local CONFIG = {
+    Speed = 50,
+    ToggleKey = Enum.KeyCode.F,
+    Keys = {F=Enum.KeyCode.W,B=Enum.KeyCode.S,L=Enum.KeyCode.A,R=Enum.KeyCode.D,
+            U=Enum.KeyCode.Space,D=Enum.KeyCode.LeftShift}
+}
+
+local flying, conn = false, nil
+local keys = {}
+
+local function start()
+    flying = true
+    conn = RunService.Heartbeat:Connect(function(dt)
+        if not flying then return end
+        local char = player.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        local cam = workspace.CurrentCamera
+        local dir = Vector3.new()
+        if keys[CONFIG.Keys.F] then dir = dir + cam.CFrame.LookVector end
+        if keys[CONFIG.Keys.B] then dir = dir - cam.CFrame.LookVector end
+        if keys[CONFIG.Keys.L] then dir = dir - cam.CFrame.RightVector end
+        if keys[CONFIG.Keys.R] then dir = dir + cam.CFrame.RightVector end
+        if keys[CONFIG.Keys.U] then dir = dir + Vector3.new(0,1,0) end
+        if keys[CONFIG.Keys.D] then dir = dir - Vector3.new(0,1,0) end
+        if dir.Magnitude > 0 then
+            root.CFrame = root.CFrame + dir.Unit * CONFIG.Speed * dt
+        end
+    end)
+    print("[Fly] ON")
+end
+
+local function stop()
+    flying = false
+    if conn then conn:Disconnect() conn = nil end
+    print("[Fly] OFF")
+end
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    keys[input.KeyCode] = true
+    if input.KeyCode == CONFIG.ToggleKey then
+        flying and stop() or start()
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    keys[input.KeyCode] = false
+end)
+print("[Fly] Press F to toggle")`
+  },
+
+  admincommands: {
+    title:"Admin Commands System", category:"Utility", icon:"⚡",
+    description:"Hệ thống lệnh admin: kick, ban, tp, heal, kill",
+    tags:["admin","commands","kick","ban"],
+    code:`-- Admin Commands System
+local Players = game:GetService("Players")
+
+local CONFIG = {
+    Admins = { ["YourName"] = 3 },
+    Prefix = "!"
+}
+
+local function level(p) return CONFIG.Admins[p.Name] or 0 end
+
+local function findTarget(name)
+    if name == "all" then return Players:GetPlayers() end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Name:lower():find(name:lower()) then return {p} end
+    end
+    return nil
+end
+
+local CMDS = {}
+
+CMDS.kick = { Lvl=2, Run=function(admin,args)
+    local t = findTarget(args[1] or ""); if not t then return end
+    local reason = table.concat(args," ",2)
+    for _, p in ipairs(t) do p:Kick(reason ~= "" and reason or "Kicked") end
+end}
+
+CMDS.heal = { Lvl=1, Run=function(admin,args)
+    local t = findTarget(args[1] or ""); if not t then return end
+    for _, p in ipairs(t) do
+        local h = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+        if h then h.Health = h.MaxHealth end
+    end
+end}
+
+CMDS.kill = { Lvl=2, Run=function(admin,args)
+    local t = findTarget(args[1] or ""); if not t then return end
+    for _, p in ipairs(t) do
+        local h = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+        if h then h.Health = 0 end
+    end
+end}
+
+CMDS.speed = { Lvl=2, Run=function(admin,args)
+    local t = findTarget(args[1] or ""); if not t then return end
+    local sp = tonumber(args[2]) or 16
+    for _, p in ipairs(t) do
+        local h = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+        if h then h.WalkSpeed = sp end
+    end
+end}
+
+CMDS.tp = { Lvl=1, Run=function(admin,args)
+    local t = findTarget(args[1] or ""); if not t or not t[1] then return end
+    local ac = admin.Character; local tc = t[1].Character
+    if ac and tc then
+        local ar = ac:FindFirstChild("HumanoidRootPart")
+        local tr = tc:FindFirstChild("HumanoidRootPart")
+        if ar and tr then ar.CFrame = tr.CFrame + Vector3.new(3,0,0) end
+    end
+end}
+
+local function process(player, msg)
+    if msg:sub(1,1) ~= CONFIG.Prefix then return end
+    local args = {}
+    for w in msg:sub(2):gmatch("%S+") do table.insert(args, w) end
+    local name = args[1] and args[1]:lower()
+    table.remove(args, 1)
+    local cmd = name and CMDS[name]
+    if not cmd then return end
+    if level(player) < cmd.Lvl then return end
+    pcall(cmd.Run, player, args)
+end
+
+Players.PlayerAdded:Connect(function(p)
+    p.Chatted:Connect(function(m) process(p, m) end)
+end)
+print("[Admin] Ready — prefix:", CONFIG.Prefix)`
+  },
+
+  uilibrary: {
+    title:"Modern UI Library", category:"Interface", icon:"🎨",
+    description:"Thư viện UI hiện đại: window, tabs, button, toggle, slider",
+    tags:["ui","gui","library","window","tab"],
+    code:`-- Modern UI Library (rút gọn)
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+
+local UI = {}
+local THEME = {
+    Bg=Color3.fromRGB(20,20,30), BgL=Color3.fromRGB(30,30,45),
+    Header=Color3.fromRGB(25,25,40), Accent=Color3.fromRGB(0,200,255),
+    Text=Color3.fromRGB(240,240,245), Border=Color3.fromRGB(50,50,70)
+}
+
+local function create(cls, props)
+    local o = Instance.new(cls)
+    for k,v in pairs(props or {}) do o[k]=v end
+    return o
+end
+
+local function corner(p,r)
+    local c = Instance.new("UICorner"); c.CornerRadius=UDim.new(0,r or 8); c.Parent=p; return c
+end
+
+function UI:CreateWindow(cfg)
+    cfg = cfg or {}
+    local title = cfg.Title or "UI"
+    local size  = cfg.Size or UDim2.new(0,520,0,400)
+
+    local sg = create("ScreenGui",{Name="UI_"..math.random(1,9999),
+        ResetOnSpawn=false, Parent=CoreGui})
+
+    local main = create("Frame",{Size=size,Position=UDim2.new(.5,-260,.5,-200),
+        BackgroundColor3=THEME.Bg, BorderSizePixel=0, Active=true, Draggable=true,
+        Parent=sg})
+    corner(main,12)
+
+    local header = create("Frame",{Size=UDim2.new(1,0,0,45),
+        BackgroundColor3=THEME.Header, BorderSizePixel=0, Parent=main})
+    corner(header,12)
+
+    create("TextLabel",{Size=UDim2.new(1,-80,1,0),Position=UDim2.new(0,14,0,0),
+        BackgroundTransparency=1, Text=title, Font=Enum.Font.GothamBold,
+        TextSize=15, TextColor3=THEME.Text, TextXAlignment=Enum.TextXAlignment.Left,
+        Parent=header})
+
+    local close = create("TextButton",{Size=UDim2.new(0,28,0,28),
+        Position=UDim2.new(1,-36,0,8), BackgroundColor3=Color3.fromRGB(255,80,90),
+        Text="×", Font=Enum.Font.GothamBold, TextSize=18,
+        TextColor3=Color3.new(1,1,1), Parent=header})
+    corner(close,6)
+    close.MouseButton1Click:Connect(function() sg:Destroy() end)
+
+    local content = create("Frame",{Size=UDim2.new(1,-20,1,-65),
+        Position=UDim2.new(0,10,0,55), BackgroundTransparency=1, Parent=main})
+
+    local tabBar = create("Frame",{Size=UDim2.new(1,0,0,35),
+        BackgroundTransparency=1, Parent=content})
+    create("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,
+        Padding=UDim.new(0,6), Parent=tabBar})
+
+    local tabContent = create("Frame",{Size=UDim2.new(1,0,1,-40),
+        Position=UDim2.new(0,0,0,40), BackgroundTransparency=1, Parent=content})
+
+    local window = {Tabs={}, Main=main, SG=sg}
+
+    function window:AddTab(name)
+        local frame = create("Frame",{Size=UDim2.new(1,0,1,0),
+            BackgroundTransparency=1, Visible=false, Parent=tabContent})
+        create("UIListLayout",{Padding=UDim.new(0,8), Parent=frame})
+
+        local btn = create("TextButton",{Size=UDim2.new(0,100,1,0),
+            BackgroundColor3=THEME.BgL, Text=name, Font=Enum.Font.Gotham,
+            TextSize=12, TextColor3=Color3.fromRGB(140,140,160), Parent=tabBar})
+        corner(btn,6)
+
+        local tab = {Frame=frame, Button=btn}
+        window.Tabs[name] = tab
+
+        btn.MouseButton1Click:Connect(function()
+            for n, t in pairs(window.Tabs) do
+                t.Frame.Visible = (n == name)
+                t.Button.BackgroundColor3 = (n == name) and THEME.Accent or THEME.BgL
+            end
+        end)
+        if not next(window.Tabs) or name == next(window.Tabs) then
+            frame.Visible = true
+            btn.BackgroundColor3 = THEME.Accent
+        end
+        return tab
+    end
+
+    function window:AddButton(tabName, text, cb)
+        local tab = window.Tabs[tabName]; if not tab then return end
+        local btn = create("TextButton",{Size=UDim2.new(1,0,0,36),
+            BackgroundColor3=THEME.Accent, Text=text, Font=Enum.Font.GothamBold,
+            TextSize=13, TextColor3=Color3.fromRGB(0,0,0), Parent=tab.Frame})
+        corner(btn,8)
+        btn.MouseButton1Click:Connect(function() if cb then cb() end end)
+        return btn
+    end
+
+    function window:AddToggle(tabName, text, default, cb)
+        local tab = window.Tabs[tabName]; if not tab then return end
+        local c = create("Frame",{Size=UDim2.new(1,0,0,36),
+            BackgroundColor3=THEME.BgL, BorderSizePixel=0, Parent=tab.Frame})
+        corner(c,8)
+        create("TextLabel",{Size=UDim2.new(1,-60,1,0),Position=UDim2.new(0,12,0,0),
+            BackgroundTransparency=1, Text=text, Font=Enum.Font.Gotham,
+            TextSize=12, TextColor3=THEME.Text, TextXAlignment=Enum.TextXAlignment.Left,
+            Parent=c})
+        local tg = create("Frame",{Size=UDim2.new(0,44,0,22),
+            Position=UDim2.new(1,-52,.5,-11),
+            BackgroundColor3=default and THEME.Accent or THEME.Border,
+            BorderSizePixel=0, Parent=c})
+        corner(tg,11)
+        local dot = create("Frame",{Size=UDim2.new(0,18,0,18),
+            Position=default and UDim2.new(1,-20,.5,-9) or UDim2.new(0,2,.5,-9),
+            BackgroundColor3=Color3.new(1,1,1), BorderSizePixel=0, Parent=tg})
+        corner(dot,9)
+        local on = default
+        local btn = create("TextButton",{Size=UDim2.new(1,0,1,0),
+            BackgroundTransparency=1, Text="", Parent=c})
+        btn.MouseButton1Click:Connect(function()
+            on = not on
+            tg.BackgroundColor3 = on and THEME.Accent or THEME.Border
+            dot.Position = on and UDim2.new(1,-20,.5,-9) or UDim2.new(0,2,.5,-9)
+            if cb then cb(on) end
+        end)
+        return {Get=function() return on end}
+    end
+
+    return window
+end
+
+local w = UI:CreateWindow({Title="Demo UI"})
+local t = w:AddTab("Main")
+w:AddButton("Main", "Click me", function() print("clicked!") end)
+w:AddToggle("Main", "Enable Feature", false, function(v) print("toggle:", v) end)
+print("[UI] Ready")
+return UI`
+  },
+
+  serverhop: {
+    title:"Server Hopper", category:"Utility", icon:"🌐",
+    description:"Tự động chuyển server tìm server ít người",
+    tags:["server","hop","rejoin","teleport"],
+    code:`-- Server Hopper
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local CONFIG = { MaxPlayers=5, MaxPages=10, PlaceId=game.PlaceId }
+
+local function fetch(cursor)
+    local url = string.format(
+        "https://games.roproxy.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100",
+        CONFIG.PlaceId)
+    if cursor and cursor ~= "" then url = url .. "&cursor="..cursor end
+    local ok, res = pcall(function() return HttpService:GetAsync(url) end)
+    if ok then
+        local ok2, data = pcall(function() return HttpService:JSONDecode(res) end)
+        if ok2 then return data end
+    end
+    return nil
+end
+
+local function hop()
+    local cursor, pages = "", 0
+    local best = nil
+    while pages < CONFIG.MaxPages do
+        pages = pages + 1
+        local data = fetch(cursor); if not data then break end
+        for _, s in ipairs(data.data or {}) do
+            local p = tonumber(s.playing) or 0
+            if p <= CONFIG.MaxPlayers and s.id ~= game.JobId and p < (s.maxPlayers or 0) then
+                if not best or p < best.playing then best = s end
+            end
+        end
+        cursor = data.nextPageCursor or ""
+        if cursor == "" then break end
+        task.wait(0.3)
+    end
+    if best then
+        TeleportService:TeleportToPlaceInstance(CONFIG.PlaceId, best.id, Players.LocalPlayer)
+    else
+        warn("[Hop] No server found")
+    end
+end
+
+return { Hop = hop, Rejoin = function()
+    TeleportService:TeleportToPlaceInstance(CONFIG.PlaceId, game.JobId, Players.LocalPlayer)
+end }`
+  },
+
+  inventory: {
+    title:"Inventory System", category:"Game", icon:"🎒",
+    description:"Quản lý vật phẩm, trang bị, stacking",
+    tags:["inventory","item","bag","equipment"],
+    code:`-- Inventory System
+local CONFIG = {
+    MaxSlots = 20,
+    Items = {
+        Sword       = {MaxStack=1, Type="Weapon", Damage=10},
+        Shield      = {MaxStack=1, Type="Armor",  Defense=5},
+        HealthPotion= {MaxStack=10,Type="Consumable", Heal=50}
+    }
+}
+
+local invs = {}
+
+local function getInv(userId)
+    invs[userId] = invs[userId] or {Items={}, Equipment={}}
+    return invs[userId]
+end
+
+local function add(userId, itemId, qty)
+    qty = qty or 1
+    local item = CONFIG.Items[itemId]
+    if not item then return false, "Item not found" end
+    local inv = getInv(userId)
+    local cur = inv.Items[itemId] or 0
+    if cur + qty > item.MaxStack then return false, "Stack full" end
+    inv.Items[itemId] = cur + qty
+    return true
+end
+
+local function remove(userId, itemId, qty)
+    qty = qty or 1
+    local inv = getInv(userId)
+    if (inv.Items[itemId] or 0) < qty then return false end
+    inv.Items[itemId] = inv.Items[itemId] - qty
+    if inv.Items[itemId] <= 0 then inv.Items[itemId] = nil end
+    return true
+end
+
+local function equip(userId, itemId, slot)
+    local inv = getInv(userId)
+    if not inv.Items[itemId] then return false end
+    if inv.Equipment[slot] then add(userId, inv.Equipment[slot], 1) end
+    remove(userId, itemId, 1)
+    inv.Equipment[slot] = itemId
+    return true
+end
+
+return {
+    Add = add, Remove = remove, Equip = equip,
+    Get = function(u) return getInv(u) end,
+    GetItems = function() return CONFIG.Items end
+}`
+  },
+
+  weather: {
+    title:"Weather System", category:"Environment", icon:"🌦️",
+    description:"Điều khiển thời tiết: mưa, tuyết, sương, bão",
+    tags:["weather","rain","snow","fog"],
+    code:`-- Weather System
+local Lighting = game:GetService("Lighting")
+
+local CONFIG = { Weather="Clear", Intensity=0.5 }
+local effects = {}
+
+local function clear()
+    for _, e in ipairs(effects) do if e.Parent then e:Destroy() end end
+    effects = {}
+    Lighting.FogEnd = 10000
+    Lighting.Brightness = 2
+end
+
+local function makeEmitter(props)
+    local e = Instance.new("ParticleEmitter")
+    for k,v in pairs(props) do e[k] = v end
+    e.Parent = workspace
+    table.insert(effects, e)
+    return e
+end
+
+local function rain()
+    makeEmitter({
+        Rate = 100 * CONFIG.Intensity,
+        Lifetime = NumberSequence.new(1,2),
+        Speed = NumberSequence.new(50,100),
+        Size = NumberSequence.new(0.1,0.2),
+        Transparency = NumberSequence.new(0.5,0.8),
+        Color = ColorSequence.new(Color3.fromRGB(150,180,255)),
+        Texture = "rbxasset://textures/particles/rain.dds"
+    })
+end
+
+local function snow()
+    makeEmitter({
+        Rate = 50 * CONFIG.Intensity,
+        Lifetime = NumberSequence.new(3,5),
+        Speed = NumberSequence.new(5,10),
+        SpreadAngle = Vector2.new(180,180),
+        Size = NumberSequence.new(0.2,0.4),
+        Transparency = NumberSequence.new(0,0.5),
+        Color = ColorSequence.new(Color3.new(1,1,1)),
+        Texture = "rbxasset://textures/particles/snow.dds"
+    })
+end
+
+local function fog()
+    Lighting.FogEnd = 100 / CONFIG.Intensity
+    Lighting.FogStart = 0
+    Lighting.FogColor = Color3.fromRGB(200,200,200)
+end
+
+local API = {}
+function API:SetWeather(w)
+    CONFIG.Weather = w
+    clear()
+    if w == "Rain" then rain()
+    elseif w == "Snow" then snow()
+    elseif w == "Fog" then fog() end
+    print("[Weather]", w)
+end
+function API:SetIntensity(i) CONFIG.Intensity = math.clamp(i,0,1); self:SetWeather(CONFIG.Weather) end
+
+return API`
+  }
+};
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[m]);
+}
+const Store = {
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ trimHistory(); } },
+  get(k,f=null){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch{ return f; } }
+};
+function trimHistory(){ if(chats.length>50) chats=chats.slice(-50); Store.set(STORAGE_KEYS.chats,chats); }
+
+/* ============================================================
+   SUGGESTIONS
+   ============================================================ */
+const SUGGESTIONS = [
+  {icon:'👁️',title:'ESP System',desc:'Highlight player qua tường',keyword:'esp'},
+  {icon:'🕊️',title:'Fly Script',desc:'Bay lượn với WASD',keyword:'fly'},
+  {icon:'💾',title:'DataStore',desc:'Lưu dữ liệu chuyên nghiệp',keyword:'datastore'},
+  {icon:'🎨',title:'UI Library',desc:'Thư viện giao diện đẹp',keyword:'uilibrary'},
+  {icon:'⚡',title:'Admin Commands',desc:'Hệ thống lệnh admin',keyword:'admincommands'},
+  {icon:'📦',title:'Bounding Box',desc:'Render bounding box 3D',keyword:'renderstepped'}
+];
+function renderSuggestions(){
+  const grid = document.getElementById('suggestionGrid');
+  if(!grid) return;
+  grid.innerHTML = SUGGESTIONS.map(s => `
+    <div class="suggestion-card" onclick="quickAsk('${s.keyword}')">
+      <div class="suggestion-icon">${s.icon}</div>
+      <div class="suggestion-title">${escapeHtml(s.title)}</div>
+      <div class="suggestion-desc">${escapeHtml(s.desc)}</div>
+    </div>`).join('');
+}
+function quickAsk(k){ document.getElementById('inputBox').value = k; sendMessage(); }
+
+/* ============================================================
+   KEYWORD MATCHING
+   ============================================================ */
+const KEYWORD_ALIASES = {
+  renderstepped:['bounding box','boundingbox','render stepped','vẽ box','box 3d'],
+  esp:['esp','highlight','thấy người','xuyên tường','player box','wallhack'],
+  datastore:['datastore','save','load','lưu dữ liệu','save data','session lock'],
+  uilibrary:['ui','gui','library','giao diện','menu','panel','window'],
+  fly:['fly','bay','lượn','flight'],
+  admincommands:['admin','lệnh','command','kick','ban','prefix'],
+  serverhop:['server hop','hop server','chuyển server','rejoin'],
+  inventory:['inventory','túi đồ','vật phẩm','item'],
+  weather:['weather','thời tiết','rain','snow','fog']
+};
+function matchModule(query){
+  const q = query.toLowerCase().trim();
+  let bestKey = null, bestScore = 0;
+  for(const [key,aliases] of Object.entries(KEYWORD_ALIASES)){
+    let score = 0;
+    if(q.includes(key)) score += 10;
+    aliases.forEach(a => { if(q.includes(a)) score += 5; });
+    if(score > bestScore){ bestScore = score; bestKey = key; }
+  }
+  return bestScore > 0 ? CODE_MODULES[bestKey] : null;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function renderMessage(role, htmlContent){
+  const area = document.getElementById('chatArea');
+  const welcome = document.getElementById('welcomeScreen');
+  if(welcome) welcome.remove();
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  div.innerHTML = `
+    <div class="avatar">${role==='ai'?'🤖':'👤'}</div>
+    <div class="message-content"><div class="message-text">${htmlContent}</div></div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+  return div;
+}
+function renderCodeBlock(lang, code){
+  const id = 'code_' + Math.random().toString(36).slice(2,9);
+  return `
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">${escapeHtml(lang)}</span>
+        <button class="copy-btn" onclick="copyCode('${id}', this)">📋 Copy</button>
+      </div>
+      <pre class="code-content" id="${id}">${escapeHtml(code)}</pre>
+    </div>`;
+}
+function copyCode(id, btn){
+  const el = document.getElementById(id);
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = '✅ Copied';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 Copy'; }, 1500);
+  });
+}
+function buildAIResponse(query){
+  const module = matchModule(query);
+  if(!module){
+    return `<p>Xin chào 👋 Mình là <strong>Doraemon AI V3</strong>.</p>
+      <p>Mình chưa nhận diện được yêu cầu cụ thể. Bạn thử các từ khoá như:</p>
+      <ul>
+        <li><strong>esp</strong> — highlight player qua tường</li>
+        <li><strong>fly</strong> — bay lượn WASD</li>
+        <li><strong>datastore</strong> — lưu dữ liệu</li>
+        <li><strong>ui</strong> — thư viện giao diện</li>
+        <li><strong>admin</strong> — hệ thống lệnh admin</li>
+      </ul>
+      <p>Hoặc bấm vào các thẻ gợi ý ở màn hình chính.</p>`;
+  }
+  return `
+    <h2>${module.icon} ${escapeHtml(module.title)}</h2>
+    <p>${escapeHtml(module.description)}</p>
+    <p><em>🏷️ Tags: ${module.tags.map(escapeHtml).join(', ')}</em></p>
+    ${renderCodeBlock('lua', module.code)}
+    <p style="margin-top:10px;color:var(--text-muted);font-size:12px;">
+      💡 Dán code này vào <strong>Script Executor</strong> hoặc
+      <strong>ServerScriptService</strong> tuỳ ngữ cảnh.
+    </p>`;
+}
+
+/* ============================================================
+   TYPING
+   ============================================================ */
+function showTyping(){
+  const area = document.getElementById('chatArea');
+  const welcome = document.getElementById('welcomeScreen');
+  if(welcome) welcome.remove();
+  const div = document.createElement('div');
+  div.className = 'message ai';
+  div.id = 'typingIndicator';
+  div.innerHTML = `
+    <div class="avatar">🤖</div>
+    <div class="message-content">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+function hideTyping(){ document.getElementById('typingIndicator')?.remove(); }
+
+/* ============================================================
+   MAIN SEND
+   ============================================================ */
+async function sendMessage(){
+  if(isProcessing) return;
+  const input = document.getElementById('inputBox');
+  const text = input.value.trim();
+  if(!text) return;
+
+  if(text === '/help'){
+    input.value = '';
+    renderMessage('user', escapeHtml(text));
+    renderMessage('ai', `<h3>📖 Danh sách lệnh</h3>
+      <ul>
+        <li><code>/help</code> — trợ giúp</li>
+        <li><code>/clear</code> — xoá cuộc trò chuyện</li>
+        <li><code>/list</code> — liệt kê module</li>
+        <li><code>/export</code> — xuất lịch sử</li>
+      </ul>`);
+    return;
+  }
+  if(text === '/clear'){ input.value = ''; clearChat(); return; }
+  if(text === '/list'){
+    input.value = '';
+    renderMessage('user', escapeHtml(text));
+    const list = Object.values(CODE_MODULES)
+      .map(m => `<li>${m.icon} <strong>${escapeHtml(m.title)}</strong> — ${escapeHtml(m.description)}</li>`)
+      .join('');
+    renderMessage('ai', `<h3>📚 Toàn bộ module (${Object.keys(CODE_MODULES).length})</h3><ul>${list}</ul>`);
+    return;
+  }
+  if(text === '/export'){ input.value = ''; exportChat(); return; }
+
+  isProcessing = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  renderMessage('user', escapeHtml(text));
+  currentChat.push({role:'user', text, time:Date.now()});
+
+  showTyping();
+  await new Promise(r => setTimeout(r, 400 + Math.random()*400));
+  hideTyping();
+
+  const html = buildAIResponse(text);
+  renderMessage('ai', html);
+  currentChat.push({role:'ai', text, time:Date.now()});
+
+  isProcessing = false;
+  if(settings.autoSave) saveCurrentChat();
+}
+
+/* ============================================================
+   INPUT
+   ============================================================ */
+function initInput(){
+  const input = document.getElementById('inputBox');
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 200) + 'px';
+  });
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+  });
+}
+
+/* ============================================================
+   CHAT MANAGEMENT
+   ============================================================ */
+function newChat(){
+  saveCurrentChat();
+  currentChatId = 'chat_' + Date.now();
+  currentChat = [];
+  const area = document.getElementById('chatArea');
+  area.innerHTML = `
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-logo">🤖</div>
+      <div class="welcome-title">Doraemon AI V3 Ultimate</div>
+      <div class="welcome-subtitle">
+        Chuyên gia sinh code Lua/Roblox với kiến thức mở rộng<br>
+        RenderStepped • ESP • DataStore • UI Library • và hơn thế nữa
+      </div>
+      <div class="suggestion-grid" id="suggestionGrid"></div>
+    </div>`;
+  renderSuggestions();
+  renderHistoryList();
+}
+function saveCurrentChat(){
+  if(!currentChatId || currentChat.length === 0) return;
+  const idx = chats.findIndex(c => c.id === currentChatId);
+  const entry = {
+    id: currentChatId,
+    title: currentChat[0]?.text?.slice(0,40) || 'New chat',
+    messages: currentChat,
+    updatedAt: Date.now()
+  };
+  if(idx >= 0) chats[idx] = entry; else chats.push(entry);
+  Store.set(STORAGE_KEYS.chats, chats);
+  renderHistoryList();
+}
+function loadChat(id){
+  const chat = chats.find(c => c.id === id);
+  if(!chat) return;
+  currentChatId = id;
+  currentChat = chat.messages;
+  const area = document.getElementById('chatArea');
+  area.innerHTML = '';
+  currentChat.forEach(msg => {
+    if(msg.role === 'user') renderMessage('user', escapeHtml(msg.text));
+    else renderMessage('ai', buildAIResponse(msg.text));
+  });
+  renderHistoryList();
+}
+function renderHistoryList(){
+  const list = document.getElementById('historyList');
+  if(!list) return;
+  if(chats.length === 0){
+    list.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:8px;">Chưa có cuộc trò chuyện nào</div>`;
+    return;
+  }
+  list.innerHTML = chats.slice(-15).reverse().map(c => `
+    <div class="history-item ${c.id===currentChatId?'active':''}" onclick="loadChat('${c.id}')">
+      <span>💬</span>${escapeHtml(c.title || 'Untitled')}
+    </div>`).join('');
+}
+function clearChat(){
+  if(!confirm('Xoá cuộc trò chuyện hiện tại?')) return;
+  currentChat = [];
+  newChat();
+  toast('Đã xoá cuộc trò chuyện', 'success');
+}
+
+/* ============================================================
+   SIDEBAR / THEME
+   ============================================================ */
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('collapsed'); }
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  settings.theme = document.body.classList.contains('light') ? 'light' : 'dark';
+  Store.set(STORAGE_KEYS.settings, settings);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(id){ document.getElementById(id)?.classList.add('show'); }
+function closeModal(id){ document.getElementById(id)?.classList.remove('show'); }
+document.addEventListener('click', e => {
+  if(e.target.classList.contains('modal')) e.target.classList.remove('show');
+});
+function showHistory(){
+  const content = document.getElementById('historyContent');
+  if(!content) return;
+  if(chats.length === 0){
+    content.innerHTML = '<p style="color:var(--text-muted)">Chưa có lịch sử.</p>';
+  } else {
+    content.innerHTML = chats.slice().reverse().map(c => `
+      <div class="history-item" onclick="loadChat('${c.id}');closeModal('historyModal');">
+        <span>💬</span>
+        <div>
+          <div>${escapeHtml(c.title)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">
+            ${new Date(c.updatedAt).toLocaleString('vi-VN')}
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  openModal('historyModal');
+}
+function showKnowledge(){
+  const grid = document.getElementById('knowledgeGrid');
+  if(!grid) return;
+  grid.innerHTML = Object.entries(CODE_MODULES).map(([key, m]) => `
+    <div class="knowledge-card" onclick="quickAsk('${key}');closeModal('knowledgeModal');">
+      <div class="knowledge-card-title">${m.icon} ${escapeHtml(m.title)}</div>
+      <div class="knowledge-card-desc">${escapeHtml(m.description)}</div>
+    </div>`).join('');
+  openModal('knowledgeModal');
+}
+function showSettings(){
+  const c = document.getElementById('settingsContent');
+  if(!c) return;
+  c.innerHTML = `
+    <div class="setting-item">
+      <div class="setting-label">💾 Tự động lưu</div>
+      <div class="setting-desc">Lưu chat vào localStorage sau mỗi tin nhắn</div>
+      <div class="toggle-switch ${settings.autoSave?'active':''}" onclick="toggleSetting('autoSave',this)"></div>
+    </div>
+    <div class="setting-item">
+      <div class="setting-label">🎬 Hiệu ứng</div>
+      <div class="setting-desc">Bật animation cho tin nhắn</div>
+      <div class="toggle-switch ${settings.animationsEnabled?'active':''}" onclick="toggleSetting('animationsEnabled',this)"></div>
+    </div>
+    <div class="setting-item">
+      <div class="setting-label">📏 Cỡ chữ code</div>
+      <div class="setting-desc">Kích thước chữ trong khối code</div>
+      <div class="setting-control">
+        <input type="number" class="setting-input" value="${settings.codeFontSize}" min="10" max="20" onchange="setCodeFont(this.value)">
+      </div>
+    </div>
+    <div class="setting-item">
+      <div class="setting-label">🗑️ Xoá toàn bộ dữ liệu</div>
+      <div class="setting-desc">Xoá tất cả chat, cài đặt, lịch sử</div>
+      <button class="sidebar-btn" onclick="resetAll()">Reset</button>
+    </div>`;
+  openModal('settingsModal');
+}
+function toggleSetting(key, el){
+  settings[key] = !settings[key];
+  el.classList.toggle('active', settings[key]);
+  Store.set(STORAGE_KEYS.settings, settings);
+}
+function setCodeFont(size){
+  settings.codeFontSize = parseInt(size) || 13;
+  document.documentElement.style.setProperty('--code-font-size', settings.codeFontSize + 'px');
+  Store.set(STORAGE_KEYS.settings, settings);
+}
+
+/* ============================================================
+   EXPORT / IMPORT / RESET
+   ============================================================ */
+function exportChat(){
+  const data = { version:VERSION, exportedAt:new Date().toISOString(), chats, settings, history };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `doraemon_backup_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Đã xuất dữ liệu', 'success');
+}
+function importChat(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if(data.chats){ chats = data.chats; Store.set(STORAGE_KEYS.chats, chats); }
+        if(data.settings){ settings = {...DEFAULT_SETTINGS, ...data.settings}; Store.set(STORAGE_KEYS.settings, settings); }
+        renderHistoryList();
+        toast('Đã nhập dữ liệu', 'success');
+      } catch { toast('File không hợp lệ', 'error'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+function resetAll(){
+  if(!confirm('XOÁ TOÀN BỘ dữ liệu? Hành động này không thể hoàn tác.')) return;
+  Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
+  chats = []; history = []; settings = {...DEFAULT_SETTINGS};
+  currentChat = [];
+  newChat();
+  toast('Đã reset toàn bộ', 'success');
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function toast(message, type='info'){
+  const container = document.getElementById('toastContainer');
+  if(!container) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  if(settings.theme === 'light') document.body.classList.add('light');
+  document.documentElement.style.setProperty('--code-font-size', (settings.codeFontSize||13) + 'px');
+  renderSuggestions();
+  renderHistoryList();
+  initInput();
+  if(!currentChatId) currentChatId = 'chat_' + Date.now();
+  console.log(`🤖 ${AI_NAME} ${VERSION} — Ready`);
+  console.log(`   Modules: ${Object.keys(CODE_MODULES).length}`);
+});
+</script>
+</body>
+</html>
